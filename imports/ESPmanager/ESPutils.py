@@ -10,10 +10,6 @@ class ESPutils:
         my_path = Path('/dev').absolute()
 
         content_array_res = General_utils.list_directory_content_array(my_path)
-        if content_array_res[0] > 0:
-            print("ERRR")
-            #todo
-
 
         status = 0 #this is the error flag, set it to 1 if process cannot complete
         if len(content_array_res[1]) < 1:
@@ -21,11 +17,10 @@ class ESPutils:
             boards = []
         else:
 
-            boards = [f for f in content_array_res[1] if bool(re.match('^(ttyUSB)[0-9]+$', f)) ]
-            #boards = [f for f in content_array_res[1]]
+            boards = ['/dev/'+ f for f in content_array_res[1] if bool(re.match('^(ttyUSB)[0-9]+$', f)) ]
 
-            print("AAAAAA   ",content_array_res[1])
-            print("BBBBBB    ", boards)
+            print("Connected devices: ",boards)
+
 
 
         return status,boards
