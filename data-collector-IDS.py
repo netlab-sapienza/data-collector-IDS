@@ -8,6 +8,7 @@ import threading
 from imports.ESPmanager import ESPutils
 import subprocess
 from multiprocessing import Process
+from imports.utilities import firmwareManager
 import os
 
 try:
@@ -18,16 +19,25 @@ except ImportError:
 
 ON_POSIX = 'posix' in sys.builtin_module_names
 
-global file_stor
 # file_stor = fileStorage.FileStorage()
 
 #threadLock = threading.Lock()
-global firmware_path
 
 def main():
-    global firmware_path
-    #TODO SVILUPPARE UN MODO PER PASSARE IL PATH DEL FIRMWARE DESIDERATO (valutare se come parametro da shell)
-    firmware_path = '/home/francesco/esp/esp32-ble-mesh'
+
+    if len(sys.argv) < 3:
+        err_code = '0C'  # C stands for custom
+        err_mess = 'NOT ENOUGH INPUT ARGUMENTS'
+        err_details = 'please pass the path of the firmware directory and the name of the output directory'
+        raise ValueError(err_code, err_mess, err_details)
+
+    fm =firmwareManager.FirmwareManager()
+
+    file_stor = fileStorage.FileStorage()
+
+
+
+
     print("****** start ******")
 
     res_list_conn_esp = ESPutils.ESPutils.list_connected_esp()
@@ -75,10 +85,13 @@ def main():
 #         __monitor_ESP__(str(self.esp_path))
 
 def __monitor_ESP__(esp_path):
-    global file_stor,firmware_path
+    global file_stor
 
     #TODO: SISTEMARE IL PATH DI IDF
     idf_path = '/home/francesco/esp/esp-idf/tools/idf.py'
+
+    fm = firmwareManager.FirmwareManager()
+    firmware_path = fm.getFirmwareDirPathStr()
 
 
     thread_list = []
@@ -175,6 +188,8 @@ def __process_line__(line, ts):
                     entry_to_store = entry_to_store + ',' + processed_field
             entry_to_store = entry_to_store + '\n'
             print("ETS ",entry_to_store)
+
+            #TODO salvare su file
 
             # threadLock.acquire()
             # file_stor.saveOnFile(entry_to_store)
