@@ -7,6 +7,7 @@ import os
 import re
 from random import randrange
 import datetime
+import time
 
 import sys
 
@@ -31,7 +32,8 @@ class FileStorage(metaclass=Singleton):
 
     def saveOnFile(self,dev_name,content):
         while not self.__ready:
-            pass
+            #thread is blocked,sleep forces yel
+            time.sleep(0.000001)
 
 
         if str(dev_name) not in self.__file_desc_dict:
@@ -41,6 +43,7 @@ class FileStorage(metaclass=Singleton):
             raise ValueError(err_code, err_mess, err_details)
 
         self.__file_desc_dict[str(dev_name)].write(content)
+        self.__file_desc_dict[str(dev_name)].flush()
 
 
 

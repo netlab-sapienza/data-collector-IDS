@@ -19,8 +19,6 @@ except ImportError:
 
 ON_POSIX = 'posix' in sys.builtin_module_names
 
-# file_stor = fileStorage.FileStorage()
-
 #threadLock = threading.Lock()
 
 def main():
@@ -50,42 +48,22 @@ def main():
     processes_list =[]
 
     for esp_path in res_list_conn_esp[1]:
-        print("launch thread")
-        Esp_process =Process(target=__monitor_ESP__, args=(esp_path,) )       #ESPThread(esp_path)
-        Esp_process.start()
-        processes_list.append(Esp_process)
+        esp_process =Process(target=__monitor_ESP__, args=(esp_path,) )       #ESPThread(esp_path)
+        esp_process.start()
+        processes_list.append(esp_process)
         #todo
 
     for p in processes_list:
         p.join()
 
-    #
-    # #thread_list = []
-    # for line in sys.stdin:
-    #     ts = datetime.datetime.now().timestamp()
-    #     sys.stdout.write(line) # print the monitor line on the stdout,in order to make the script transparent
-    #     line_parser_t = myThread(line,ts)
-    #     line_parser_t.start()
-    #     #thread_list.append(line_parser_t)
-    #
-    # #for t in thread_list:
-    # #    t.join()
     print("Exiting Main Thread of data-collector")
 
 
-#
-# class ESPThread(threading.Thread):
-#     def __init__(self, esp_path):
-#         threading.Thread.__init__(self)
-#         self.esp_path = esp_path
-#         print("THREAD:  ",esp_path)
-#
-#     def run(self):
-#
-#         __monitor_ESP__(str(self.esp_path))
-
 def __monitor_ESP__(esp_path):
-    global file_stor
+    global threadLock  #shared tra i thread del singolo processo
+    threadLock = threading.Lock()
+
+    print("Process ",os.getpid(), "spawned by ",os.getppid(), "to manage ESP in ",esp_path)
 
     #TODO: SISTEMARE IL PATH DI IDF
     idf_path = '/home/francesco/esp/esp-idf/tools/idf.py'
@@ -137,10 +115,10 @@ def __monitor_ESP__(esp_path):
             #print('no output yet')
             pass
         else:
-            print("PROCESS ",os.getpid(),    " : ",line)
             ts = datetime.datetime.now().timestamp()
+            print("PROCESS ", os.getpid(), " : ", line)
             #     sys.stdout.write(line) # print the monitor line on the stdout,in order to make the script transparent
-            line_parser_t = LineThread(line, ts)
+            line_parser_t = LineThread(line, ts,esp_path)
             line_parser_t.start()
             thread_list.append(line_parser_t)
         ret_val.poll()
@@ -154,27 +132,26 @@ def __monitor_ESP__(esp_path):
 
 
 class LineThread(threading.Thread):
-    def __init__(self, line, ts):
+    def __init__(self, line, ts,esp_path):
         threading.Thread.__init__(self)
         self.line = line
         self.ts = ts
+        self.esp_path = esp_path
 
     def run(self):
-        __process_line__(str(self.line), self.ts)
+        __process_line__(str(self.line), self.ts,self.esp_path)
 
 
-def __process_line__(line, ts):
-    global file_stor
+def __process_line__(line, ts,esp_path):
+    global threadLock
     timestamp = int(ts * 1000000)
     # microseconds
 
     split_line = line.rstrip().split(" ")
 
-    #print("AAA ",split_line)
 
     if len(split_line) > 4:
         if split_line[0][-1] == 'I' and split_line[2] == 'BenchMark:':
-            #print("AAA ", split_line)
             # the line corresponds to a benchmark entry
             entry_to_store = str(timestamp)
             # todo: check on split_line[3] which must contain the ID of the ESP32
@@ -191,28 +168,32 @@ def __process_line__(line, ts):
 
             #TODO salvare su file
 
-            # threadLock.acquire()
-            # file_stor.saveOnFile(entry_to_store)
-            # threadLock.release()
+            f_s = fileStorage.FileStorage()
+
+            esp_name = esp_path.split('/')[-1]
+
+            threadLock.acquire()
+            f_s.saveOnFile(esp_name,entry_to_store)
+            threadLock.release()
 
     pass
 
-#### utils, valutare se spostare in utilities
-
-def enqueue_output(out, queue):
-    for line in iter(out.readline, b''):
-        queue.put(line)
-    out.close()
-
-
-def getOutput(outQueue):
-    outStr = ''
-    try:
-        while True: # Adds output from the Queue until it is empty
-            outStr+=outQueue.get_nowait()
-
-    except Empty:
-        return outStr
+# #### utils, valutare se spostare in utilities
+#
+# def enqueue_output(out, queue):
+#     for line in iter(out.readline, b''):
+#         queue.put(line)
+#     out.close()
+#
+#
+# def getOutput(outQueue):
+#     outStr = ''
+#     try:
+#         while True: # Adds output from the Queue until it is empty
+#             outStr+=outQueue.get_nowait()
+#
+#     except Empty:
+#         return outStr
 
 
 
