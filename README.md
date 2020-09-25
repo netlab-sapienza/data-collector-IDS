@@ -17,6 +17,17 @@ This script performs the following actions:
 ## Usage
 
 
+In your firmware add log commands like the following one:
+```bash
+ESP_LOGI("BenchMark", "this is a dummy sentence");
+```
+This will be stored into a .csv as:
+***1601065958772355,this,is,a,dummy,sentence***
+
+</br>
+
+Clone the repo then:
+
 ```bash
 cd data-collector-IDS
 python3 data-collector-IDS.py firmware-path output-directory-name
