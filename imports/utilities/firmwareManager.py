@@ -16,7 +16,7 @@ class FirmwareManager(metaclass=Singleton):
 
 
         if len(sys.argv) < 2:
-            err_code = '2C'  # C stands for custom
+            err_code = '0fm'
             err_mess = 'MISSING FIRMWARE DIRECTORY NAME'
             err_details = 'please pass the name of the directory containing the ESP32 firmware'
             raise ValueError(err_code, err_mess, err_details)
@@ -32,14 +32,14 @@ class FirmwareManager(metaclass=Singleton):
         firmware_dir_path = Path(str(sys.argv[1])).resolve()
 
         if not firmware_dir_path.is_dir():
-            err_code = '3C'  # C stands for custom
+            err_code = '1fm'  # C stands for custom
             err_mess = 'NO FIRMWARE DIRECTORY FOUND '
             err_details = 'no firmware found at ' + str(firmware_dir_path)
             raise ValueError(err_code, err_mess, err_details)
 
 
         if not firmware_dir_path.joinpath('sdkconfig').is_file():
-            err_code = '3Cbis'  # C stands for custom
+            err_code = '2fm'  # C stands for custom
             err_mess = 'NO FIRMWARE DIRECTORY FOUND '
             err_details = 'no firmware found at ' + str(firmware_dir_path) +" , no sdkconfig file found in the given directory"
             raise ValueError(err_code, err_mess, err_details)

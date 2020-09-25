@@ -10,6 +10,7 @@ import subprocess
 from multiprocessing import Process
 from imports.utilities import firmwareManager
 import os
+import shutil
 
 try:
     from Queue import Queue, Empty
@@ -24,10 +25,19 @@ ON_POSIX = 'posix' in sys.builtin_module_names
 def main():
 
     if len(sys.argv) < 3:
-        err_code = '0C'  # C stands for custom
+        err_code = '0M'  # C stands for main
         err_mess = 'NOT ENOUGH INPUT ARGUMENTS'
         err_details = 'please pass the path of the firmware directory and the name of the output directory'
         raise ValueError(err_code, err_mess, err_details)
+
+    if len(shutil.which("idf.py")) < 1:
+        err_code = '1M'  # C stands for custom
+        err_mess = 'NO ESP-IDF FRAMEWORK FOUND '
+        err_details = 'ESPRESSIF ESP-IDF framework doesn\'t seem to be installed, impossible to find idf.py '
+        raise ValueError(err_code, err_mess, err_details)
+
+
+
 
     fm =firmwareManager.FirmwareManager()
 
@@ -40,7 +50,7 @@ def main():
 
     res_list_conn_esp = ESPutils.ESPutils.list_connected_esp()
     if res_list_conn_esp[0] > 0 or len(res_list_conn_esp[1]) < 1:
-        err_code = '0C_main'  # C stands for custom
+        err_code = '2M'  # C stands for custom
         err_mess = 'Error retrieving list of ESP32s '
         err_details = 'Impossible to retrieve the list of connected ESP32 boards or no ESP32 board found '
         raise ValueError(err_code, err_mess, err_details)
@@ -65,8 +75,7 @@ def __monitor_ESP__(esp_path):
 
     print("Process ",os.getpid(), "spawned by ",os.getppid(), "to manage ESP in ",esp_path)
 
-    #TODO: SISTEMARE IL PATH DI IDF
-    idf_path = '/home/francesco/esp/esp-idf/tools/idf.py'
+    idf_path = shutil.which("idf.py")
 
     fm = firmwareManager.FirmwareManager()
     firmware_path = fm.getFirmwareDirPathStr()
@@ -108,7 +117,7 @@ def __monitor_ESP__(esp_path):
 
         try:
             #line = outQueue.get_nowait()  # or q.get(timeout=.1)
-            line = ret_val.stdout.readline().decode("utf-8")   #todo da verificare se bloccante
+            line = ret_val.stdout.readline().decode("utf-8")   #bloccante
 
 
         except Empty:
@@ -116,7 +125,8 @@ def __monitor_ESP__(esp_path):
             pass
         else:
             ts = datetime.datetime.now().timestamp()
-            print("PROCESS ", os.getpid(), " : ", line)
+            #print("PROCESS ", os.getpid(), " : ", line.rstrip())
+            print("DEVICE ", esp_path, " : ", line.rstrip())
             #     sys.stdout.write(line) # print the monitor line on the stdout,in order to make the script transparent
             line_parser_t = LineThread(line, ts,esp_path)
             line_parser_t.start()
@@ -163,13 +173,12 @@ def __process_line__(line, ts,esp_path):
 
                 if len(processed_field) > 0:
                     entry_to_store = entry_to_store + ',' + processed_field
+            print("ETS ", entry_to_store)
             entry_to_store = entry_to_store + '\n'
-            print("ETS ",entry_to_store)
 
-            #TODO salvare su file
+
 
             f_s = fileStorage.FileStorage()
-
             esp_name = esp_path.split('/')[-1]
 
             threadLock.acquire()

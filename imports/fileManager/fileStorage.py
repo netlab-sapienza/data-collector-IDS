@@ -37,7 +37,7 @@ class FileStorage(metaclass=Singleton):
 
 
         if str(dev_name) not in self.__file_desc_dict:
-            err_code = '1C'  # C stands for custom
+            err_code = '0s'  # s for storage
             err_mess = 'TRYING TO SAVE ON A NON-EXISTING FILE '
             err_details = 'Called saveOnFile passing a wrong argument for dev_name, the file does not exist'
             raise ValueError(err_code, err_mess, err_details)
@@ -50,7 +50,7 @@ class FileStorage(metaclass=Singleton):
     def __checkValidityOutputDIRName(self):
 
         if len(sys.argv) < 3:
-            err_code = '1C'  # C stands for custom
+            err_code = '1s'  # C stands for custom
             err_mess = 'NO DIRECTORY PASSED AS ARGUMENT'
             err_details = 'please pass the name of a directory where to store results as argument'
             raise ValueError(err_code, err_mess, err_details)
@@ -59,7 +59,7 @@ class FileStorage(metaclass=Singleton):
         output_dir_name_check = bool(re.match('^[a-zA-Z0-9\-_]+$', str(sys.argv[2])))
 
         if not output_dir_name_check:
-            err_code = '2C'  # C stands for custom
+            err_code = '2s'
             err_mess = 'INVALID NAME FOR THE OUTPUT DIRECTORY'
             err_details = 'please pass a name containing only letters/numbers/-/_  and no whitespace '
             raise ValueError(err_code, err_mess, err_details)
@@ -79,7 +79,7 @@ class FileStorage(metaclass=Singleton):
         try:
             os.makedirs(output_dir_path)
         except OSError as e:
-            err_code = '3C'  # C stands for custom
+            err_code = '3s'
             err_mess = 'ERROR CREATING THE OUTPUT DIRECTORY'
             err_details = 'Impossible to create the output directory, DUMP: ', e
             raise ValueError(err_code, err_mess, err_details)
@@ -92,7 +92,7 @@ class FileStorage(metaclass=Singleton):
 
         res_list_conn_esp = ESPutils.list_connected_esp()
         if res_list_conn_esp[0] > 0 or len(res_list_conn_esp[1]) < 1:
-            err_code = '0C_main'  # C stands for custom
+            err_code = '4s'
             err_mess = 'Error retrieving list of ESP32s '
             err_details = 'Impossible to retrieve the list of connected ESP32 boards or no ESP32 board found '
             raise ValueError(err_code, err_mess, err_details)
@@ -104,7 +104,7 @@ class FileStorage(metaclass=Singleton):
         for elem in res_list_conn_esp_split:
 
             if len(elem)< 1:
-                err_code = '1C_main'  # C stands for custom
+                err_code = '5s'
                 err_mess = 'Error creating the name for output file '
                 err_details = 'Impossible to create the output filename, something went wrong... abort '
                 raise ValueError(err_code, err_mess, err_details)
