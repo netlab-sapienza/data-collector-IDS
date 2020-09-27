@@ -5,6 +5,7 @@ import datetime
 import string
 import threading
 
+from imports.NTPClient import get_ntp_offset
 from imports.ESPmanager import ESPutils
 import subprocess
 from multiprocessing import Process
@@ -36,14 +37,11 @@ def main():
         err_details = 'ESPRESSIF ESP-IDF framework doesn\'t seem to be installed, impossible to find idf.py '
         raise ValueError(err_code, err_mess, err_details)
 
-
-
+    get_ntp_offset()
 
     fm =firmwareManager.FirmwareManager()
 
     file_stor = fileStorage.FileStorage()
-
-
 
 
     print("****** start ******")
